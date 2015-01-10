@@ -34,6 +34,18 @@ class AnnotationsServiceProvider extends ServiceProvider {
     protected $scanRoutes = [];
 
     /**
+     * A prefix to apply to all event scan classes
+     * @var string
+     */
+    protected $prefixEvents = '';
+
+    /**
+     * A prefix to apply to all route scan classes
+     * @var string
+     */
+    protected $prefixRoutes = '';
+
+    /**
      * Determines if we will auto-scan in the local environment.
      *
      * @var bool
@@ -153,7 +165,7 @@ class AnnotationsServiceProvider extends ServiceProvider {
             return;
         }
 
-        $scanner = new EventScanner($this->scanEvents);
+        $scanner = new EventScanner( $this->prefixClasses( $this->prefixEvents, $this->scanEvents ) );
 
         file_put_contents(
           $this->finder->getScannedEventsPath(), '<?php ' . $scanner->getEventDefinitions()
@@ -202,11 +214,31 @@ class AnnotationsServiceProvider extends ServiceProvider {
             return;
         }
 
-        $scanner = new RouteScanner($this->scanRoutes);
+        $scanner = new RouteScanner( $this->prefixClasses( $this->prefixRoutes, $this->scanRoutes ));
 
         file_put_contents(
           $this->finder->getScannedRoutesPath(), '<?php ' . $scanner->getRouteDefinitions()
         );
+    }
+
+    /**
+     * Apply the given prefix to the given routes
+     *
+     * @param  string $prefix The prefix to apply
+     * @param  array  $routes The routes to apply the prefix to
+     * @return array
+     */
+    public function prefixClasses( $prefix, $routes )
+    {
+        // trim the namespace segments for safety
+        $prefix = trim( $prefix, ' \\' );
+
+        return array_map(function($item) use ( $prefix ) {
+            $item = trim( $item, ' \\' );
+
+            // concat the strings if there is a prefix, otherwise return the given classname
+            return empty($prefix) ? $item : "{$prefix}\\{$item}";
+        }, $routes);
     }
 
     /**
