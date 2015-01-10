@@ -235,7 +235,9 @@ class AnnotationsServiceProvider extends ServiceProvider {
 
         return array_map(function($item) use ( $prefix ) {
             $item = trim( $item, ' \\' );
-            return "{$prefix}\\{$item}";
+
+            // concat the strings if there is a prefix, otherwise return the given classname
+            return empty($prefix) ? $item : "{$prefix}\\{$item}";
         }, $routes);
     }
 
