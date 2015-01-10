@@ -228,7 +228,7 @@ class AnnotationsServiceProvider extends ServiceProvider {
      * @param  array  $routes The routes to apply the prefix to
      * @return array
      */
-    protected function prefixClasses( $prefix, $routes )
+    public function prefixClasses( $prefix, $routes )
     {
         // trim the namespace segments for safety
         $prefix = trim( $prefix, ' \\' );
