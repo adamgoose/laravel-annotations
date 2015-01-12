@@ -204,7 +204,7 @@ To recursively scan the entire controllers namespace ( `App\Http\Controllers` ),
 
 It will automatically adjust `App` to your app's namespace.
 
-#### Prefixing classes
+### Prefixing classes
 
 You can prefix all of the event or routing classes to scan using the `$prefixEvents` or `$prefixRoutes` properties. This can help tidy up more complex projects with a lot of controllers.
 
@@ -226,4 +226,46 @@ is the same as
       'App\Http\Controllers\Auth\LoginController'
     ];
     protected $prefixRoutes = '';
+```
+
+### Advanced
+
+If you want to use any logic to add classes to the list to scan, you can override the `routeScans()` or `eventScans()` methods.
+
+The following is an example of adding a controller to the scan list if the current environment is `local`:
+
+```php
+    public function routeScans() {
+        $classes = parent::routeScans();
+
+        if ( $this->app->environment('local') ) {
+            $classes = array_merge($classes, ['App\\Http\\Controllers\\LocalOnlyController']);
+        }
+
+        return $classes;
+    }
+```
+
+#### Scanning Namespaces
+
+You can use the `getClassesFromNamespace( $namespace )` method to recursively add namespaces to the list. This will scan the given namespace. It only works for classes in the `app` directory, and relies on the PSR-4 namespacing standard.
+
+This is what the `$scanControllers` flag uses with the controllers directory.
+
+Here is an example that builds on the last one - adding a whole local-only namespace.
+
+```php
+    public function routeScans() {
+        $classes = parent::routeScans();
+
+        if ( $this->app->environment('local') ) {
+        {
+            $classes = array_merge(
+                $classes,
+                $this->getClassesFromNamespace( 'App\\Http\\Controllers\\Local' )
+            );
+        }
+
+        return $classes;
+    }
 ```
