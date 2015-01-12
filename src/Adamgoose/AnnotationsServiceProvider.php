@@ -2,12 +2,15 @@
 
 use Adamgoose\Console\EventScanCommand;
 use Adamgoose\Console\RouteScanCommand;
+use Illuminate\Console\AppNamespaceDetectorTrait;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use Adamgoose\Events\Annotations\Scanner as EventScanner;
 use Adamgoose\Routing\Annotations\Scanner as RouteScanner;
 
 class AnnotationsServiceProvider extends ServiceProvider {
+
+    use AppNamespaceDetectorTrait;
 
     /**
      * The commands to be registered.
@@ -243,4 +246,24 @@ class AnnotationsServiceProvider extends ServiceProvider {
     {
         return $this->scanRoutes;
     }
+
+    /**
+     * Convert the given namespace to a file path
+     * @param  string $namespace the namespace to convert
+     * @return string
+     */
+    public function convertNamespaceToPath( $namespace )
+    {
+        // remove the app namespace from the namespace if it is there
+        $appNamespace = $this->getAppNamespace();
+
+        if (substr($namespace, 0, strlen($appNamespace)) == $appNamespace)
+        {
+            $namespace = substr($namespace, strlen($appNamespace));
+        }
+
+        // trim and return the path
+        return str_replace('\\', '/', trim($namespace, ' \\') );
+    }
+
 }
