@@ -44,6 +44,18 @@ class AnnotationsServiceProvider extends ServiceProvider {
     protected $scanRoutes = [];
 
     /**
+     * A prefix to apply to all event scan classes
+     * @var string
+     */
+    protected $prefixEvents = '';
+
+    /**
+     * A prefix to apply to all route scan classes
+     * @var string
+     */
+    protected $prefixRoutes = '';
+
+    /**
      * Determines if we will auto-scan in the local environment.
      *
      * @var bool
@@ -178,3 +190,27 @@ Here's an example that uses all of the available parameters for a `@Get` annotat
 #### @Post, @Options, @Put, @Patch, @Delete
 
 The `@Post`, `@Options`, `@Put`, `@Patch`, and `@Delete` annotations have the exact same syntax as the `@Get` annotation, except it will register a route for the respective HTTP verb, as opposed to the GET verb.
+
+#### Prefixing classes
+
+You can prefix all of the event or routing classes to scan using the `$prefixEvents` or `$prefixRoutes` properties. This can help tidy up more complex projects with a lot of controllers.
+
+For example, with the routing scans:
+
+```php
+    protected $scanRoutes = [
+      'HomeController',
+      'Auth\LoginController'
+    ];
+    protected $prefixRoutes = 'App\Http\Controllers';
+```
+
+is the same as
+
+```php
+    protected $scanRoutes = [
+      'App\Http\Controllers\HomeController',
+      'App\Http\Controllers\Auth\LoginController'
+    ];
+    protected $prefixRoutes = '';
+```

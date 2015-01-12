@@ -11,6 +11,39 @@ class AnnotationsServiceProviderTest extends PHPUnit_Framework_TestCase {
 		$this->provider = new AnnotationsServiceProvider( $this->app );
 	}
 
+	public function testPrefixClasses()
+	{
+		$prefix = 'Prefix';
+		$classes = ['Foo', 'Bar', 'Foo\\Bar'];
+
+		$this->assertEquals(
+			['Prefix\\Foo', 'Prefix\\Bar', 'Prefix\\Foo\\Bar'],
+			$this->provider->prefixClasses($prefix, $classes)
+		);
+	}
+
+	public function testPrefixClassesWithNoPrefix()
+	{
+		$prefix = '';
+		$classes = ['Foo', 'Bar'];
+
+		$this->assertEquals(
+			['Foo', 'Bar'],
+			$this->provider->prefixClasses($prefix, $classes)
+		);
+	}
+
+	public function testPrefixClassesWithTrimsWhitespaceAndDereferencers()
+	{
+		$prefix = '\\Prefix ';
+		$classes = ['\\ Foo  \\', ' \\Bar\\ '];
+
+		$this->assertEquals(
+			['Prefix\\Foo', 'Prefix\\Bar'],
+			$this->provider->prefixClasses($prefix, $classes)
+		);
+	}
+
 	public function testConvertNamespaceToDirectory()
 	{
 		$this->provider = new AnnotationsServiceProviderAppNamespaceStub( $this->app );
@@ -55,6 +88,7 @@ class AnnotationsServiceProviderTest extends PHPUnit_Framework_TestCase {
 		], $results );
 	}
 }
+
 
 class AnnotationsServiceProviderAppNamespaceStub extends AnnotationsServiceProvider {
 	public $appNamespace = 'App';
