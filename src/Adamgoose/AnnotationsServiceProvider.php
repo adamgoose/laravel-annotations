@@ -157,7 +157,9 @@ class AnnotationsServiceProvider extends ServiceProvider {
             $this->scanEvents();
         }
 
-        if ( ! empty($this->eventScans()) && $this->finder->eventsAreScanned())
+        $scans = $this->eventScans();
+
+        if ( ! empty( $scans ) && $this->finder->eventsAreScanned())
         {
             $this->loadScannedEvents();
         }
@@ -170,12 +172,14 @@ class AnnotationsServiceProvider extends ServiceProvider {
      */
     protected function scanEvents()
     {
-        if (empty($this->eventScans()))
+        $scans = $this->eventScans();
+
+        if (empty( $scans ))
         {
             return;
         }
 
-        $scanner = new EventScanner( $this->eventScans() );
+        $scanner = new EventScanner( $scans );
 
         file_put_contents(
           $this->finder->getScannedEventsPath(), '<?php ' . $scanner->getEventDefinitions()
@@ -206,7 +210,9 @@ class AnnotationsServiceProvider extends ServiceProvider {
             $this->scanRoutes();
         }
 
-        if ( ! empty($this->routeScans()) && $this->finder->routesAreScanned())
+        $scans = $this->routeScans();
+
+        if ( ! empty( $scans ) && $this->finder->routesAreScanned())
         {
             $this->loadScannedRoutes();
         }
@@ -219,12 +225,14 @@ class AnnotationsServiceProvider extends ServiceProvider {
      */
     protected function scanRoutes()
     {
-        if (empty($this->routeScans()))
+        $scans = $this->routeScans();
+
+        if (empty( $scans ))
         {
             return;
         }
 
-        $scanner = new RouteScanner( $this->routeScans() );
+        $scanner = new RouteScanner( $scans );
 
         file_put_contents(
           $this->finder->getScannedRoutesPath(), '<?php ' . $scanner->getRouteDefinitions()
@@ -263,7 +271,7 @@ class AnnotationsServiceProvider extends ServiceProvider {
 
             // concat the strings if there is a prefix, otherwise return the given classname
             return empty($prefix) ? $item : "{$prefix}\\{$item}";
-        }, $routes);
+        }, (array)$routes);
     }
 
     /**
