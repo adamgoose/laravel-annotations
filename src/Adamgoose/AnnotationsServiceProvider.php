@@ -56,6 +56,13 @@ class AnnotationsServiceProvider extends ServiceProvider {
     protected $scanWhenLocal = false;
 
     /**
+     * Determines whether or not to automatically scan the controllers
+     * directory (App\Http\Controllers) for routes
+     * @var boolean
+     */
+    protected $scanControllers = false;
+
+    /**
      * File finder for annotations.
      *
      * @var AnnotationFinder
@@ -276,7 +283,18 @@ class AnnotationsServiceProvider extends ServiceProvider {
      */
     public function routeScans()
     {
-        return $this->prefixClasses( $this->prefixRoutes, $this->scanRoutes );
+        $classes = $this->prefixClasses( $this->prefixRoutes, $this->scanRoutes );
+
+        // scan the controllers namespace if the flag is set
+        if ( $this->scanControllers )
+        {
+            $classes = array_merge(
+                $classes,
+                $this->getClassesFromNamespace( $this->getAppNamespace() . 'Http\\Controllers' )
+            );
+        }
+
+        return $classes;
     }
 
     /**

@@ -62,6 +62,13 @@ class AnnotationsServiceProvider extends ServiceProvider {
      */
     protected $scanWhenLocal = false;
 
+    /**
+     * Determines whether or not to automatically scan the controllers
+     * directory (App\Http\Controllers) for routes
+     * @var boolean
+     */
+    protected $scanControllers = false;
+
 }
 ```
 
@@ -190,6 +197,12 @@ Here's an example that uses all of the available parameters for a `@Get` annotat
 #### @Post, @Options, @Put, @Patch, @Delete
 
 The `@Post`, `@Options`, `@Put`, `@Patch`, and `@Delete` annotations have the exact same syntax as the `@Get` annotation, except it will register a route for the respective HTTP verb, as opposed to the GET verb.
+
+#### Scan the Controllers Directory
+
+To recursively scan the entire controllers namespace ( `App\Http\Controllers` ), you can set the `$scanControllers` flag to true.
+
+It will automatically adjust `App` to your app's namespace.
 
 #### Prefixing classes
 
