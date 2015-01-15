@@ -336,20 +336,6 @@ class AnnotationsServiceProvider extends ServiceProvider {
     {
         $directory = ( $base ?: $this->app->make('path') ) . '/' . $this->convertNamespaceToPath( $namespace );
 
-        $classes = array();
-
-        foreach ($this->app->make('files')->allFiles( $directory ) as $file)
-        {
-            // filter out non php files - there shouldn't be any, but just in case
-            if ( ! ends_with($file->getFilename(), '.php') ) continue;
-
-            // Get relative file path, and convert directory slashes to namespace ones
-            $classname = str_replace( ['.php', '/'], ['', '\\'], $file->getRelativePathname() );
-
-            // Prepend the relative classname with the given classname
-            $classes[] = $namespace . '\\' . $classname;
-        }
-
-        return $classes;
+        return $this->app->make('Illuminate\Filesystem\ClassFinder')->findClasses( $directory );
     }
 }

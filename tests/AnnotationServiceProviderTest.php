@@ -11,6 +11,11 @@ class AnnotationsServiceProviderTest extends PHPUnit_Framework_TestCase {
 		$this->provider = new AnnotationsServiceProvider( $this->app );
 	}
 
+	public function tearDown()
+	{
+		m::close();
+	}
+
 	public function testPrefixClasses()
 	{
 		$prefix = 'Prefix';
@@ -70,22 +75,17 @@ class AnnotationsServiceProviderTest extends PHPUnit_Framework_TestCase {
 		$this->provider = new AnnotationsServiceProviderAppNamespaceStub( $this->app );
 		$this->provider->appNamespace = 'App';
 
-		$this->app->shouldReceive( 'make' )->once()->with('files')->andReturn(
-			$filesystem = m::mock('Illuminate\Filesystem\Filesystem')
-		);
+		$this->app->shouldReceive( 'make' )
+			->with( 'Illuminate\Filesystem\ClassFinder' )->once()
+			->andReturn( $classFinder = m::mock() );
 
-		$filesystem->shouldReceive( 'allFiles' )->with('path/to/app/Base')->andReturn( [
-			new \Symfony\Component\Finder\SplFileInfo( 'Foo.php', '', 'Foo.php' ),
-			new \Symfony\Component\Finder\SplFileInfo( 'FooBar.txt', '', 'FooBar.txt' ),
-			new \Symfony\Component\Finder\SplFileInfo( 'Baz.php', 'Foo/Bar', 'Foo/Bar/Baz.php' ),
-		] );
+		$classFinder->shouldReceive('findClasses')
+			->with('path/to/app/Base')->once()
+			->andReturn( ['classes'] );
 
 		$results = $this->provider->getClassesFromNamespace( 'App\\Base', 'path/to/app' );
 
-		$this->assertEquals( [
-			'App\\Base\\Foo',
-			'App\\Base\\Foo\\Bar\\Baz',
-		], $results );
+		$this->assertEquals( ['classes'], $results );
 	}
 }
 
