@@ -12,7 +12,7 @@ abstract class AnnotationScanner {
 	 *
 	 * @var string
 	 */
-	protected $namespace;
+	protected $namespaces = [];
 
 	/**
 	 * The path to scan for annotations.
@@ -73,14 +73,28 @@ abstract class AnnotationScanner {
 	}
 
 	/**
+	 * Add an annotation namespace for the SimpleAnnotationReader instance
+	 *
+	 * @param string $namespace
+	 */
+	public function addAnnotationNamespace($namespace)
+	{
+		$this->namespaces[] = $namespace;
+
+		return $this;
+	}
+
+	/**
 	 * Get an annotation reader instance.
 	 *
 	 * @return \Doctrine\Common\Annotations\SimpleAnnotationReader
 	 */
 	protected function getReader()
 	{
-		with($reader = new SimpleAnnotationReader)
-				->addNamespace($this->namespace);
+		$reader = new SimpleAnnotationReader;
+
+		foreach ($this->namespaces as $namespace)
+			$reader->addNamespace($namespace);
 
 		return $reader;
 	}

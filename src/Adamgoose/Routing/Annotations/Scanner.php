@@ -11,7 +11,7 @@ class Scanner extends AnnotationScanner {
 	 *
 	 * @var string
 	 */
-	protected $namespace = 'Adamgoose\Routing\Annotations\Annotations';
+	protected $namespaces = ['Adamgoose\Routing\Annotations\Annotations'];
 
 	/**
 	 * Convert the scanned annotations into route definitions.
