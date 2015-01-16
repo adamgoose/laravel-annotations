@@ -44,18 +44,6 @@ class AnnotationsServiceProvider extends ServiceProvider {
     protected $scanRoutes = [];
 
     /**
-     * A prefix to apply to all event scan classes
-     * @var string
-     */
-    protected $prefixEvents = '';
-
-    /**
-     * A prefix to apply to all route scan classes
-     * @var string
-     */
-    protected $prefixRoutes = '';
-
-    /**
      * Determines if we will auto-scan in the local environment.
      *
      * @var bool
@@ -206,7 +194,7 @@ It will automatically adjust `App` to your app's namespace.
 
 ### Prefixing classes
 
-You can prefix all of the event or routing classes to scan using the `$prefixEvents` or `$prefixRoutes` properties. This can help tidy up more complex projects with a lot of controllers.
+You can prefix all of the classes to scan for events or routes using the `$eventsClassNamespace` or `$routesClassNamespace` properties. This can help tidy up more complex projects with a lot of controllers.
 
 For example, with the routing scans:
 
@@ -215,7 +203,7 @@ For example, with the routing scans:
       'HomeController',
       'Auth\LoginController'
     ];
-    protected $prefixRoutes = 'App\Http\Controllers';
+    protected $routesClassNamespace = 'App\Http\Controllers';
 ```
 
 is the same as
@@ -225,7 +213,7 @@ is the same as
       'App\Http\Controllers\HomeController',
       'App\Http\Controllers\Auth\LoginController'
     ];
-    protected $prefixRoutes = '';
+    protected $routesClassNamespace = '';
 ```
 
 ### Advanced

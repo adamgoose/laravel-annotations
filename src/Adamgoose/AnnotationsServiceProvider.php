@@ -40,13 +40,13 @@ class AnnotationsServiceProvider extends ServiceProvider {
      * A prefix to apply to all event scan classes
      * @var string
      */
-    protected $prefixEvents = '';
+    protected $eventsClassNamespace = '';
 
     /**
      * A prefix to apply to all route scan classes
      * @var string
      */
-    protected $prefixRoutes = '';
+    protected $routesClassNamespace = '';
 
     /**
      * Determines if we will auto-scan in the local environment.
@@ -281,7 +281,7 @@ class AnnotationsServiceProvider extends ServiceProvider {
      */
     public function eventScans()
     {
-        return $this->prefixClasses( $this->prefixEvents, $this->scanEvents );
+        return $this->prefixClasses( $this->eventsClassNamespace, $this->scanEvents );
     }
 
     /**
@@ -291,7 +291,7 @@ class AnnotationsServiceProvider extends ServiceProvider {
      */
     public function routeScans()
     {
-        $classes = $this->prefixClasses( $this->prefixRoutes, $this->scanRoutes );
+        $classes = $this->prefixClasses( $this->routesClassNamespace, $this->scanRoutes );
 
         // scan the controllers namespace if the flag is set
         if ( $this->scanControllers )
