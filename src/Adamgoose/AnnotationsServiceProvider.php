@@ -37,6 +37,13 @@ class AnnotationsServiceProvider extends ServiceProvider {
     protected $scanRoutes = [];
 
     /**
+     * The namespaces to scan for route annotations.
+     *
+     * @var array
+     */
+    protected $scanRoutesNamespaces = [];
+
+    /**
      * A prefix to apply to all event scan classes
      * @var string
      */
@@ -302,6 +309,41 @@ class AnnotationsServiceProvider extends ServiceProvider {
             );
         }
 
+        $classes = array_merge(
+            $classes,
+            $this->parseNamespaceScans( $this->scanRoutesNamespaces )
+        );
+
+        return $classes;
+    }
+
+    /**
+     * Scan the given namespaces, then parse using the nested 'only' and
+     * 'exclude' options applied
+     *
+     * @param  array $input
+     * @return array
+     */
+    public function parseNamespaceScans( $namespaces )
+    {
+        // rip out the 'only' and 'exclude' options from the input array
+        $options = [
+            'only' => (array) array_pull( $namespaces, 'only', [] ),
+            'except' => (array) array_pull( $namespaces, 'except', [] ),
+        ];
+
+        $classes = [];
+
+        // loop through the namespaces, and add the classes to the $classes array
+        foreach ($namespaces as $namespace)
+            $classes = array_merge($classes, $this->getClassesFromNamespace( $namespace ));
+
+        // filter out items in the 'exclude' array
+        $classes = array_filter($classes, function($item) use ($options)
+        {
+            return ! $this->itemExcludedByOptions( $item, $options );
+        });
+
         return $classes;
     }
 
@@ -337,5 +379,17 @@ class AnnotationsServiceProvider extends ServiceProvider {
         $directory = ( $base ?: $this->app->make('path') ) . '/' . $this->convertNamespaceToPath( $namespace );
 
         return $this->app->make('Illuminate\Filesystem\ClassFinder')->findClasses( $directory );
+    }
+
+    /**
+     * Determine if the given options exclude a particular item
+     * @param  string $method
+     * @param  array  $options
+     * @return boolean
+     */
+    protected function itemExcludedByOptions($item, array $options)
+    {
+        return (( ! empty($options['only']) && ! in_array($item, (array) $options['only'])) ||
+            ( ! empty($options['except']) && in_array($item, (array) $options['except'])));
     }
 }
