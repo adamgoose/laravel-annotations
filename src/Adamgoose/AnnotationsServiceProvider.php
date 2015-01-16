@@ -41,6 +41,13 @@ class AnnotationsServiceProvider extends ServiceProvider {
      *
      * @var array
      */
+    protected $scanEventsNamespaces = [];
+
+    /**
+     * The namespaces to scan for route annotations.
+     *
+     * @var array
+     */
     protected $scanRoutesNamespaces = [];
 
     /**
@@ -288,7 +295,14 @@ class AnnotationsServiceProvider extends ServiceProvider {
      */
     public function eventScans()
     {
-        return $this->prefixClasses( $this->eventsClassNamespace, $this->scanEvents );
+        $classes = $this->prefixClasses( $this->eventsClassNamespace, $this->scanEvents )
+
+        $classes = array_merge(
+            $classes,
+            $this->parseNamespaceScans( $this->scanEventsNamespaces )
+        );
+
+        return $classes;
     }
 
     /**
