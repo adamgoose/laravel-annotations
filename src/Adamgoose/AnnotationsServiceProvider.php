@@ -144,6 +144,32 @@ class AnnotationsServiceProvider extends ServiceProvider {
     }
 
     /**
+     * Register the scanner.
+     *
+     * @return void
+     */
+    protected function registerRouteScanner()
+    {
+        $this->app->bindShared('annotations.route.scanner', function ($app)
+        {
+            return new RouteScanner([]);
+        });
+    }
+
+    /**
+     * Register the scanner.
+     *
+     * @return void
+     */
+    protected function registerEventScanner()
+    {
+        $this->app->bindShared('annotations.event.scanner', function ($app)
+        {
+            return new EventScanner([]);
+        });
+    }
+
+    /**
      * Load the annotated events.
      *
      * @return void
@@ -173,7 +199,9 @@ class AnnotationsServiceProvider extends ServiceProvider {
             return;
         }
 
-        $scanner = new EventScanner($this->scanEvents);
+        $scanner = $this->app->make('annotations.event.scanner');
+
+        $scanner->setClassesToScan($this->scanEvents);
 
         file_put_contents(
           $this->finder->getScannedEventsPath(), '<?php ' . $scanner->getEventDefinitions()
@@ -222,7 +250,9 @@ class AnnotationsServiceProvider extends ServiceProvider {
             return;
         }
 
-        $scanner = new RouteScanner($this->scanRoutes);
+        $scanner = $this->app->make('annotations.route.scanner');
+
+        $scanner->setClassesToScan($this->scanRoutes);
 
         file_put_contents(
           $this->finder->getScannedRoutesPath(), '<?php ' . $scanner->getRouteDefinitions()

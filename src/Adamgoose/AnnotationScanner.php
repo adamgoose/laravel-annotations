@@ -68,6 +68,16 @@ abstract class AnnotationScanner {
 	}
 
 	/**
+	 * Set the classes to scan
+	 *
+	 * @param array $scans
+	 */
+	public function setClassesToScan( array $scans )
+	{
+		$this->scan = $scans;
+	}
+
+	/**
 	 * Add an annotation namespace for the SimpleAnnotationReader instance
 	 *
 	 * @param string $namespace

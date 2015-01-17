@@ -62,9 +62,11 @@ class EventScanCommand extends Command {
     {
         $provider = 'Adamgoose\AnnotationsServiceProvider';
 
-        return '<?php '.PHP_EOL.PHP_EOL.Scanner::create(
-          $this->laravel->getProvider($provider)->eventScans()
-        )->getEventDefinitions().PHP_EOL;
+        $scanner = $this->app->make('annotations.event.scanner');
+
+        $scanner->setClassesToScan($this->laravel->getProvider($provider)->eventScans());
+
+        return '<?php '.PHP_EOL.PHP_EOL.$scanner->getEventDefinitions().PHP_EOL;
     }
 
     /**
