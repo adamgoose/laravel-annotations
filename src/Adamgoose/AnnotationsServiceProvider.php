@@ -73,11 +73,31 @@ class AnnotationsServiceProvider extends ServiceProvider {
      */
     public function boot()
     {
+        $this->registerAnnotators();
+
         $this->loadAnnotatedEvents();
 
         if ( ! $this->app->routesAreCached())
         {
             $this->loadAnnotatedRoutes();
+        }
+    }
+
+    /**
+     * Register the annotation classes with the annotation registry
+     *
+     *  @return void
+     */
+    public function registerAnnotators()
+    {
+        foreach (Finder::create()->files()->in(__DIR__.'/Events/Annotations/Annotations') as $file)
+        {
+            AnnotationRegistry::registerFile($file->getRealPath());
+        }
+
+        foreach (Finder::create()->files()->in(__DIR__.'/Routing/Annotations/Annotations') as $file)
+        {
+            AnnotationRegistry::registerFile($file->getRealPath());
         }
     }
 
