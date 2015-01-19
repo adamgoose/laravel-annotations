@@ -295,7 +295,7 @@ class AnnotationsServiceProvider extends ServiceProvider {
      */
     public function eventScans()
     {
-        $classes = $this->prefixClasses( $this->eventsClassNamespace, $this->scanEvents )
+        $classes = $this->prefixClasses( $this->eventsClassNamespace, $this->scanEvents );
 
         $classes = array_merge(
             $classes,
@@ -358,7 +358,8 @@ class AnnotationsServiceProvider extends ServiceProvider {
             return ! $this->itemExcludedByOptions( $item, $options );
         });
 
-        return $classes;
+        // reset array numbering
+        return array_values($classes);
     }
 
     /**
@@ -396,7 +397,9 @@ class AnnotationsServiceProvider extends ServiceProvider {
     }
 
     /**
-     * Determine if the given options exclude a particular item
+     * Determine if the given options exclude a particular item.
+     * Copied from Illuminate\Routing\ControllerDispatcher@methodExcludedByOptions
+     *
      * @param  string $method
      * @param  array  $options
      * @return boolean
