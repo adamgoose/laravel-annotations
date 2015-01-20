@@ -140,7 +140,7 @@ class AnnotationsServiceProvider extends ServiceProvider {
 
             $scanner->addAnnotationNamespace(
                 'Adamgoose\Routing\Annotations\Annotations',
-                __DIR__.'/Events/Annotations/Annotations'
+                __DIR__.'/Routing/Annotations/Annotations'
             );
 
             return $scanner;
