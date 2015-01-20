@@ -178,3 +178,22 @@ Here's an example that uses all of the available parameters for a `@Get` annotat
 #### @Post, @Options, @Put, @Patch, @Delete
 
 The `@Post`, `@Options`, `@Put`, `@Patch`, and `@Delete` annotations have the exact same syntax as the `@Get` annotation, except it will register a route for the respective HTTP verb, as opposed to the GET verb.
+
+### Registering New Annotators
+
+If you want to register your own annotations, create a namespace containing subclasses of `Adamgoose\Routing\Annotations\Annotations` - let's call this `App\Http\Annotations`.
+
+Then, in your annotations service provider, override the `addRoutingAnnotations( RouteScanner $scanner )` method, and register your routing annotations namespace:
+
+```php
+    use Adamgoose\Routing\Annotations\Scanner as RouteScanner;
+
+    public function addRoutingAnnotations( RouteScanner $scanner )
+    {
+        $scanner->addAnnotationNamespace( 'App\Http\Annotations' );
+    }
+```
+
+If your annotations namespace is not inside your application's `app` directory in a PSR-4 file structure, you must provide the path to the annotations directory as the second argument.
+
+(This example is for the routing annotations, but there are equivalent methods for event annotations)
