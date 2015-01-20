@@ -5,13 +5,6 @@ use Adamgoose\AnnotationScanner;
 class Scanner extends AnnotationScanner {
 
 	/**
-	 * The namespace to check for annotation reader annotations
-	 *
-	 * @var string
-	 */
-	protected $namespaces = ['Adamgoose\Events\Annotations\Annotations'];
-
-	/**
 	 * Convert the scanned annotations into route definitions.
 	 *
 	 * @return string

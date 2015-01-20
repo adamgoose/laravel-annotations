@@ -1,11 +1,14 @@
 <?php namespace Adamgoose;
 
+use Adamgoose\NamespaceToPathConverterTrait;
 use ReflectionClass;
 use Symfony\Component\Finder\Finder;
 use Doctrine\Common\Annotations\AnnotationRegistry;
 use Doctrine\Common\Annotations\SimpleAnnotationReader;
 
 abstract class AnnotationScanner {
+
+    use NamespaceToPathConverterTrait;
 
 	/**
 	 * The namespace to check for annotation reader annotations
@@ -78,15 +81,37 @@ abstract class AnnotationScanner {
 	}
 
 	/**
-	 * Add an annotation namespace for the SimpleAnnotationReader instance
+	 * Add an annotation namespace for the SimpleAnnotationReader instance.
+	 *
+	 * If the second parameter is null, it will assume the namespace is PSR-4'd
+	 * inside your app folder.
 	 *
 	 * @param string $namespace
+	 * @param string $path
 	 */
-	public function addAnnotationNamespace($namespace)
+	public function addAnnotationNamespace($namespace, $path = null)
 	{
 		$this->namespaces[] = $namespace;
 
-		return $this;
+		return $this->registerAnnotationsPathWithRegistry(
+			$path ?: $this->getPathFromNamespace( $namespace )
+		);
+	}
+
+	/**
+	 * Register the annotator files with the annotation registry
+	 *
+	 * @param  string $path
+	 * @return $this
+	 */
+	public function registerAnnotationsPathWithRegistry( $path )
+	{
+		foreach (Finder::create()->files()->in( $path ) as $file)
+        {
+            AnnotationRegistry::registerFile($file->getRealPath());
+        }
+
+        return $this;
 	}
 
 	/**
