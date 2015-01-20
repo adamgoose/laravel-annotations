@@ -73,7 +73,11 @@ class AnnotationsServiceProvider extends ServiceProvider {
      */
     public function boot()
     {
+        $this->addEventAnnotations( $this->app->make('annotations.event.scanner') );
+
         $this->loadAnnotatedEvents();
+
+        $this->addRoutingAnnotations( $this->app->make('annotations.route.scanner') );
 
         if ( ! $this->app->routesAreCached())
         {
@@ -161,6 +165,35 @@ class AnnotationsServiceProvider extends ServiceProvider {
 
             return $scanner;
         });
+    }
+
+    /**
+     * Add an annotations to the route scanner
+     *
+     * @param RouteScanner $namespace
+     */
+    public function addRoutingAnnotations( RouteScanner $scanner ) {}
+
+    /**
+     * Add an annotations to the route scanner
+     *
+     * @param RouteScanner $namespace
+     */
+    public function addEventAnnotations( EventScanner $scanner ) {}
+
+    /**
+     * Add an annotation namespace to the event scanner
+     *
+     * @param string $namespace
+     * @param string $path
+     */
+    public function addEventAnnotations( $namespace, $path = null )
+    {
+        $scanner = $this->app->make('annotations.event.scanner');
+
+        $scanner->addAnnotationNamespace($namespace, $path);
+
+        return $this;
     }
 
     /**
