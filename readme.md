@@ -1,3 +1,7 @@
+# DEPRECATED
+
+In favor of https://github.com/LaravelCollective/annotations. Please update your composer.json file.
+
 ## Annotations for The Laravel Framework
 
 [![Build Status](https://travis-ci.org/adamgoose/laravel-annotations.svg)](https://travis-ci.org/adamgoose/laravel-annotations)
