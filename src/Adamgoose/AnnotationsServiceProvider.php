@@ -2,12 +2,15 @@
 
 use Adamgoose\Console\EventScanCommand;
 use Adamgoose\Console\RouteScanCommand;
+use Illuminate\Console\AppNamespaceDetectorTrait;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use Adamgoose\Events\Annotations\Scanner as EventScanner;
 use Adamgoose\Routing\Annotations\Scanner as RouteScanner;
 
 class AnnotationsServiceProvider extends ServiceProvider {
+
+    use AppNamespaceDetectorTrait;
 
     /**
      * The commands to be registered.
@@ -34,11 +37,44 @@ class AnnotationsServiceProvider extends ServiceProvider {
     protected $scanRoutes = [];
 
     /**
+     * The namespaces to scan for route annotations.
+     *
+     * @var array
+     */
+    protected $scanEventsNamespaces = [];
+
+    /**
+     * The namespaces to scan for route annotations.
+     *
+     * @var array
+     */
+    protected $scanRoutesNamespaces = [];
+
+    /**
+     * A prefix to apply to all event scan classes
+     * @var string
+     */
+    protected $eventsClassNamespace = '';
+
+    /**
+     * A prefix to apply to all route scan classes
+     * @var string
+     */
+    protected $routesClassNamespace = '';
+
+    /**
      * Determines if we will auto-scan in the local environment.
      *
      * @var bool
      */
     protected $scanWhenLocal = false;
+
+    /**
+     * Determines whether or not to automatically scan the controllers
+     * directory (App\Http\Controllers) for routes
+     * @var boolean
+     */
+    protected $scanControllers = false;
 
     /**
      * File finder for annotations.
@@ -135,7 +171,9 @@ class AnnotationsServiceProvider extends ServiceProvider {
             $this->scanEvents();
         }
 
-        if ( ! empty($this->scanEvents) && $this->finder->eventsAreScanned())
+        $scans = $this->eventScans();
+
+        if ( ! empty( $scans ) && $this->finder->eventsAreScanned())
         {
             $this->loadScannedEvents();
         }
@@ -148,12 +186,14 @@ class AnnotationsServiceProvider extends ServiceProvider {
      */
     protected function scanEvents()
     {
-        if (empty($this->scanEvents))
+        $scans = $this->eventScans();
+
+        if (empty( $scans ))
         {
             return;
         }
 
-        $scanner = new EventScanner($this->scanEvents);
+        $scanner = new EventScanner( $scans );
 
         file_put_contents(
           $this->finder->getScannedEventsPath(), '<?php ' . $scanner->getEventDefinitions()
@@ -184,7 +224,9 @@ class AnnotationsServiceProvider extends ServiceProvider {
             $this->scanRoutes();
         }
 
-        if ( ! empty($this->scanRoutes) && $this->finder->routesAreScanned())
+        $scans = $this->routeScans();
+
+        if ( ! empty( $scans ) && $this->finder->routesAreScanned())
         {
             $this->loadScannedRoutes();
         }
@@ -197,12 +239,14 @@ class AnnotationsServiceProvider extends ServiceProvider {
      */
     protected function scanRoutes()
     {
-        if (empty($this->scanRoutes))
+        $scans = $this->routeScans();
+
+        if (empty( $scans ))
         {
             return;
         }
 
-        $scanner = new RouteScanner($this->scanRoutes);
+        $scanner = new RouteScanner( $scans );
 
         file_put_contents(
           $this->finder->getScannedRoutesPath(), '<?php ' . $scanner->getRouteDefinitions()
@@ -225,13 +269,40 @@ class AnnotationsServiceProvider extends ServiceProvider {
     }
 
     /**
+     * Apply the given prefix to the given routes
+     *
+     * @param  string $prefix The prefix to apply
+     * @param  array  $routes The routes to apply the prefix to
+     * @return array
+     */
+    public function prefixClasses( $prefix, $routes )
+    {
+        // trim the namespace segments for safety
+        $prefix = trim( $prefix, ' \\' );
+
+        return array_map(function($item) use ( $prefix ) {
+            $item = trim( $item, ' \\' );
+
+            // concat the strings if there is a prefix, otherwise return the given classname
+            return empty($prefix) ? $item : "{$prefix}\\{$item}";
+        }, (array)$routes);
+    }
+
+    /**
      * Get the classes to be scanned by the provider.
      *
      * @return array
      */
     public function eventScans()
     {
-        return $this->scanEvents;
+        $classes = $this->prefixClasses( $this->eventsClassNamespace, $this->scanEvents );
+
+        $classes = array_merge(
+            $classes,
+            $this->parseNamespaceScans( $this->scanEventsNamespaces )
+        );
+
+        return $classes;
     }
 
     /**
@@ -241,6 +312,101 @@ class AnnotationsServiceProvider extends ServiceProvider {
      */
     public function routeScans()
     {
-        return $this->scanRoutes;
+        $classes = $this->prefixClasses( $this->routesClassNamespace, $this->scanRoutes );
+
+        // scan the controllers namespace if the flag is set
+        if ( $this->scanControllers )
+        {
+            $classes = array_merge(
+                $classes,
+                $this->getClassesFromNamespace( $this->getAppNamespace() . 'Http\\Controllers' )
+            );
+        }
+
+        $classes = array_merge(
+            $classes,
+            $this->parseNamespaceScans( $this->scanRoutesNamespaces )
+        );
+
+        return $classes;
+    }
+
+    /**
+     * Scan the given namespaces, then parse using the nested 'only' and
+     * 'exclude' options applied
+     *
+     * @param  array $input
+     * @return array
+     */
+    public function parseNamespaceScans( $namespaces )
+    {
+        // rip out the 'only' and 'exclude' options from the input array
+        $options = [
+            'only' => (array) array_pull( $namespaces, 'only', [] ),
+            'except' => (array) array_pull( $namespaces, 'except', [] ),
+        ];
+
+        $classes = [];
+
+        // loop through the namespaces, and add the classes to the $classes array
+        foreach ($namespaces as $namespace)
+            $classes = array_merge($classes, $this->getClassesFromNamespace( $namespace ));
+
+        // filter out items in the 'exclude' array
+        $classes = array_filter($classes, function($item) use ($options)
+        {
+            return ! $this->itemExcludedByOptions( $item, $options );
+        });
+
+        // reset array numbering
+        return array_values($classes);
+    }
+
+    /**
+     * Convert the given namespace to a file path
+     *
+     * @param  string $namespace the namespace to convert
+     * @return string
+     */
+    public function convertNamespaceToPath( $namespace )
+    {
+        // remove the app namespace from the namespace if it is there
+        $appNamespace = $this->getAppNamespace();
+
+        if (substr($namespace, 0, strlen($appNamespace)) == $appNamespace)
+        {
+            $namespace = substr($namespace, strlen($appNamespace));
+        }
+
+        // trim and return the path
+        return str_replace('\\', '/', trim($namespace, ' \\') );
+    }
+
+    /**
+     * Get a list of the classes in a namespace. Leaving the second argument
+     * will scan for classes within the project's app directory
+     *
+     * @param  string $namespace the namespace to search
+     * @return array
+     */
+    public function getClassesFromNamespace( $namespace, $base = null )
+    {
+        $directory = ( $base ?: $this->app->make('path') ) . '/' . $this->convertNamespaceToPath( $namespace );
+
+        return $this->app->make('Illuminate\Filesystem\ClassFinder')->findClasses( $directory );
+    }
+
+    /**
+     * Determine if the given options exclude a particular item.
+     * Copied from Illuminate\Routing\ControllerDispatcher@methodExcludedByOptions
+     *
+     * @param  string $method
+     * @param  array  $options
+     * @return boolean
+     */
+    protected function itemExcludedByOptions($item, array $options)
+    {
+        return (( ! empty($options['only']) && ! in_array($item, (array) $options['only'])) ||
+            ( ! empty($options['except']) && in_array($item, (array) $options['except'])));
     }
 }

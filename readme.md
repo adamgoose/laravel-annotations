@@ -57,6 +57,13 @@ class AnnotationsServiceProvider extends ServiceProvider {
      */
     protected $scanWhenLocal = false;
 
+    /**
+     * Determines whether or not to automatically scan the controllers
+     * directory (App\Http\Controllers) for routes
+     * @var boolean
+     */
+    protected $scanControllers = false;
+
 }
 ```
 
@@ -226,5 +233,102 @@ class AuthController extends Controller {
     return redirect( route('login') );
   }
 
+}
+```
+
+#### Scan the Controllers Directory
+
+To recursively scan the entire controllers namespace ( `App\Http\Controllers` ), you can set the `$scanControllers` flag to true.
+
+It will automatically adjust `App` to your app's namespace.
+
+#### Scanning a Custom Namespace/Directory
+
+If, for example, you wanted to only scan, say, `App\Http\Controllers\Admin`, not the whole `Controllers` namespace, you can add it to the `$scanRoutesNamespaces` property:
+
+```php
+protected $scanRoutesNamespaces = ['App\Http\Controllers\Admin'];
+```
+
+Note that the classes must be inside your app's "app" path, and must be structured according to the PSR-4 standard.
+
+##### Filtering Namespace Scans
+
+You can filter the `$scanRoutesNamespaces` array using the laravel-style `only` and `except` options.
+
+Continuing the above example, let's say you have an `App\Http\Controllers\Admin\UnfinishedController`:
+
+```php
+protected $scanRoutesNamespaces = [
+  'App\Http\Controllers\Admin',
+  'except' => ['App\Http\Controllers\Admin\UnfinishedController'],
+];
+```
+
+Note that this does not filter the properties scanned as a result of the `$scanControllers` flag.
+
+### Prefixing classes
+
+You can prefix all of the classes to scan for events or routes using the `$eventsClassNamespace` or `$routesClassNamespace` properties. This can help tidy up more complex projects with a lot of controllers.
+
+For example, with the routing scans:
+
+```php
+protected $scanRoutes = [
+  'HomeController',
+  'Auth\LoginController'
+];
+protected $routesClassNamespace = 'App\Http\Controllers';
+```
+
+is the same as
+
+```php
+protected $scanRoutes = [
+  'App\Http\Controllers\HomeController',
+  'App\Http\Controllers\Auth\LoginController'
+];
+protected $routesClassNamespace = '';
+```
+
+### Advanced
+
+If you want to use any logic to add classes to the list to scan, you can override the `routeScans()` or `eventScans()` methods.
+
+The following is an example of adding a controller to the scan list if the current environment is `local`:
+
+```php
+public function routeScans() {
+    $classes = parent::routeScans();
+
+    if ( $this->app->environment('local') ) {
+        $classes = array_merge($classes, ['App\\Http\\Controllers\\LocalOnlyController']);
+    }
+
+    return $classes;
+}
+```
+
+#### Scanning Namespaces
+
+You can use the `getClassesFromNamespace( $namespace )` method to recursively add namespaces to the list. This will scan the given namespace. It only works for classes in the `app` directory, and relies on the PSR-4 namespacing standard.
+
+This is what the `$scanControllers` flag uses with the controllers directory.
+
+Here is an example that builds on the last one - adding a whole local-only namespace.
+
+```php
+public function routeScans() {
+    $classes = parent::routeScans();
+
+    if ( $this->app->environment('local') ) {
+    {
+        $classes = array_merge(
+            $classes,
+            $this->getClassesFromNamespace( 'App\\Http\\Controllers\\Local' )
+        );
+    }
+
+    return $classes;
 }
 ```
